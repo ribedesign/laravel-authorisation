@@ -25,8 +25,8 @@ class CreateAuthorisationTables extends Migration
         Schema::create($tableNames['permissions'], function (Blueprint $table) {
             $table->increments('id');
             $table->string('name')->unique();
-            $table->integer('object_id')->unsigned();
-            $table->integer('action_id')->unsigned();
+            $table->integer('object_id')->unsigned()->nullable(false);
+            $table->integer('action_id')->unsigned()->nullable(false);
             $table->integer('enabled')->unsigned()->default(1);
             $table->timestamps();
         });
