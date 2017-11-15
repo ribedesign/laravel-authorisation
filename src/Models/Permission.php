@@ -19,12 +19,21 @@ class Permission extends Model implements PermissionContract
     public $guarded = ['id'];
 
     /**
+     * @var array
+     */
+    protected $defaults = array(
+        'object_id' => 0,
+        'action_id' => 0,
+    );
+
+    /**
      * Create a new Eloquent model instance.
      *
      * @param array $attributes
      */
     public function __construct(array $attributes = [])
     {
+        $this->setRawAttributes($this->defaults, true);
         parent::__construct($attributes);
 
         $this->setTable(config('laravel-authorisation.table_names.permissions'));
@@ -69,7 +78,7 @@ class Permission extends Model implements PermissionContract
     {
         $permission = static::getPermissions()->where('name', $name)->first();
 
-        if (! $permission) {
+        if (!$permission) {
             throw new PermissionDoesNotExist();
         }
 

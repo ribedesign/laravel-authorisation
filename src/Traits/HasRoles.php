@@ -50,7 +50,7 @@ trait HasRoles
             $roles = $roles->toArray();
         }
 
-        if (! is_array($roles)) {
+        if (!is_array($roles)) {
             $roles = [$roles];
         }
 
@@ -65,7 +65,7 @@ trait HasRoles
         return $query->whereHas('roles', function ($query) use ($roles) {
             $query->where(function ($query) use ($roles) {
                 foreach ($roles as $role) {
-                    $query->orWhere(config('laravel-authorisation.table_names.roles').'.id', $role->id);
+                    $query->orWhere(config('laravel-authorisation.table_names.roles') . '.id', $role->id);
                 }
             });
         });
@@ -127,12 +127,24 @@ trait HasRoles
      */
     public function hasRole($roles)
     {
+        $allroles = new Collection();
+        if ($this->roles instanceof Collection) {
+            foreach ($this->roles as $role) {
+                $parent = $role->parentrole;
+                while (!is_null($parent)) {
+                    $allroles->push($parent);
+                    $parent = $parent->parentrole;
+                }
+            }
+            $allroles = $allroles->merge($this->roles)->unique('id')->values();
+        }
+
         if (is_string($roles)) {
-            return $this->roles->contains('name', $roles);
+            return $allroles->contains('name', $roles);
         }
 
         if ($roles instanceof Role) {
-            return $this->roles->contains('id', $roles->id);
+            return $allroles->contains('id', $roles->id);
         }
 
         if (is_array($roles)) {
@@ -145,7 +157,7 @@ trait HasRoles
             return false;
         }
 
-        return (bool) $roles->intersect($this->roles)->count();
+        return (bool)$roles->intersect($allroles)->count();
     }
 
     /**
@@ -169,19 +181,31 @@ trait HasRoles
      */
     public function hasAllRoles($roles)
     {
+        $allroles = new Collection();
+        if ($this->roles instanceof Collection) {
+            foreach ($this->roles as $role) {
+                $parent = $role->parentrole;
+                while (!is_null($parent)) {
+                    $allroles->push($parent);
+                    $parent = $parent->parentrole;
+                }
+            }
+            $allroles = $allroles->merge($this->roles)->unique('id')->values();
+        }
+
         if (is_string($roles)) {
-            return $this->roles->contains('name', $roles);
+            return $allroles->contains('name', $roles);
         }
 
         if ($roles instanceof Role) {
-            return $this->roles->contains('id', $roles->id);
+            return $allroles->contains('id', $roles->id);
         }
 
         $roles = collect()->make($roles)->map(function ($role) {
             return $role instanceof Role ? $role->name : $role;
         });
 
-        return $roles->intersect($this->roles->pluck('name')) == $roles;
+        return $roles->intersect($allroles->pluck('name')) == $roles;
     }
 
     /**
@@ -256,7 +280,7 @@ trait HasRoles
         if (is_string($permission)) {
             $permission = app(Permission::class)->findByName($permission);
 
-            if (! $permission) {
+            if (!$permission) {
                 return false;
             }
         }

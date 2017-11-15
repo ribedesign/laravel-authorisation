@@ -38,7 +38,7 @@ class Action extends Model implements ActionContract
     public function permissions()
     {
         return $this->belongsToMany(
-            config('laravel-authorisation.models.permission'),
+            config('laravel-authorisation.models.permission')
         );
     }
 
